@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LocalStorage Form Saver</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+
+      .card {
+        background: #fff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        width: 500px;
+        max-width: 90%;
+      }
+
+      h2 {
+        text-align: center;
+        margin-top: 0;
+      }
+
+      label {
+        display: block;
+        margin: 12px 0 6px;
+        font-weight: bold;
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+      }
+
+      textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .clear-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+
+      .save-btn {
+        background: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>Saved Form Data</h2>
+
+      <form id="userForm">
+        <label for="fullName">Full Name</label>
+        <input type="text" id="fullName" name="fullName" placeholder="Enter your name" />
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email" />
+
+        <label for="role">Role</label>
+        <select id="role" name="role">
+          <option value="">Select Role</option>
+          <option value="Developer">Developer</option>
+          <option value="Manager">Manager</option>
+          <option value="Designer">Designer</option>
+        </select>
+
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" placeholder="Write your notes here..."></textarea>
+
+        <div class="actions">
+          <button type="button" class="save-btn" id="manualSave">Save Now</button>
+          <button type="button" class="clear-btn" id="clearData">Clear Saved Data</button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      function persistFormState(formId, storageKey = formId) {
+        const form = document.getElementById(formId);
+
+        if (!form) {
+          console.error(`Form with id "${formId}" was not found.`);
+          return;
+        }
+
+        const fields = form.querySelectorAll('input, select, textarea');
+
+        function saveFormData() {
+          const data = {};
+
+          fields.forEach((field) => {
+            if (!field.name) return;
+
+            if (field.type === 'checkbox') {
+              data[field.name] = field.checked;
+            } else {
+              data[field.name] = field.value;
+            }
+          });
+
+          localStorage.setItem(storageKey, JSON.stringify(data));
+        }
+
+        function restoreFormData() {
+          const savedData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+
+          fields.forEach((field) => {
+            if (!field.name || !(field.name in savedData)) return;
+
+            if (field.type === 'checkbox') {
+              field.checked = Boolean(savedData[field.name]);
+            } else {
+              field.value = savedData[field.name] || '';
+            }
+          });
+        }
+
+        function clearSavedData() {
+          localStorage.removeItem(storageKey);
+
+          fields.forEach((field) => {
+            if (field.type === 'checkbox') {
+              field.checked = false;
+            } else {
+              field.value = '';
+            }
+          });
+        }
+
+        fields.forEach((field) => {
+          field.addEventListener('input', saveFormData);
+          field.addEventListener('change', saveFormData);
+        });
+
+        const saveButton = document.getElementById('manualSave');
+        const clearButton = document.getElementById('clearData');
+
+        saveButton?.addEventListener('click', saveFormData);
+        clearButton?.addEventListener('click', clearSavedData);
+
+        restoreFormData();
+      }
+
+      persistFormState('userForm', 'userFormData');
+    </script>
+  </body>
+</html>
